@@ -1,62 +1,119 @@
 {{##def.page_title = 'Game Info' #}}
 
 {{##def.content:
-    <div class="row panel radius">
-        <h4>Game #<strong>{{=it.game.id}}</strong> information</h4>
-        <p>
-            <b>Busted At: </b> {{#def.format: { n: it.game.game_crash, decimals: 2 } }}x
-        </p>
-        <p>
-            <b>Played: </b>{{=it.game.created}} <small>{{=it.game.timeago}}</small>
-        </p>
-        <hr>
-        <h6>Players</h6>
-        <table class="user-table">
-          <thead>
-            <tr>
-                <td>Player</td>
-                <td>Bet</td>
-                <td>Cashed Out</td>
-                <td>Bonus</td>
-                <td>Profit</td>
-            </tr>
-          </thead>
-          <tbody>
-            {{~it.plays :play:index}}
-                <tr {{?!play.cash_out}}class="lose"{{?}}>
-                    <td>
-                        <strong>
-                            <a href="/user/{{=play.username}}">{{=play.username}}</a>
-                        </strong>
-                    </td>
-                    <td>
-                        {{#def.format: { n: play.bet } }} bits
-                    </td>
-                    <td>
-                        {{? play.cash_out}}
-                        {{#def.format: {n: play.cash_out / play.bet * 100, decimals: 2} }}x
-                        {{??}}
-                        Lose
-                        {{?}}
-                    </td>
-                    <td>
-                        {{? play.bonus }}
-                           {{#def.format: {n: play.bonus/play.bet* 100 * 100, decimals: 2} }}%
-                        {{??}}
-                          -
-                        {{?}}
-                    </td>
-                    <td>
-                        {{#def.format: { n: (play.cash_out ? play.cash_out : 0) - play.bet + ( play.bonus ? play.bonus : 0) , decimals: 2 } }}
-                        bits
-                    </td>
-                </tr>
-            {{~}}
-          </tbody>
-        </table>
-        <h6><b>Hash:</b> <a href="/faq#fair">{{=it.game.hash}}</a></h6>
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <div class="bg-slate-800/50 backdrop-blur-sm rounded-xl p-8 border border-slate-700 shadow-xl">
+
+            <!-- Game Header -->
+            <div class="mb-6">
+                <h4 class="text-3xl font-bold mb-4">
+                    Game #<span class="text-cyan-400">{{=it.game.id}}</span> Information
+                </h4>
+
+                <div class="space-y-2 text-lg">
+                    <p class="flex items-center gap-2">
+                        <span class="text-slate-400 font-semibold">Busted At:</span>
+                        <span class="text-red-400 font-bold text-xl">{{#def.format: { n: it.game.game_crash, decimals: 2 } }}x</span>
+                    </p>
+                    <p class="flex items-center gap-2">
+                        <span class="text-slate-400 font-semibold">Played:</span>
+                        <span class="text-white">{{=it.game.created}}</span>
+                        <small class="text-slate-500">{{=it.game.timeago}}</small>
+                    </p>
+                </div>
+            </div>
+
+            <hr class="border-slate-700 my-6">
+
+            <!-- Players Section -->
+            <div class="mb-6">
+                <h6 class="text-2xl font-bold mb-4 text-white">Players</h6>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-slate-700/50 border-b-2 border-slate-600">
+                                <th class="text-left py-3 px-4 font-semibold text-slate-300">Player</th>
+                                <th class="text-left py-3 px-4 font-semibold text-slate-300">Bet</th>
+                                <th class="text-left py-3 px-4 font-semibold text-slate-300">Cashed Out</th>
+                                <th class="text-left py-3 px-4 font-semibold text-slate-300">Bonus</th>
+                                <th class="text-left py-3 px-4 font-semibold text-slate-300">Profit</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700">
+                            {{~it.plays :play:index}}
+                                <tr class="{{?!play.cash_out}}bg-red-900/20 hover:bg-red-900/30{{??}}hover:bg-slate-700/30{{?}} transition-colors">
+                                    <td class="py-3 px-4">
+                                        <strong>
+                                            <a href="/user/{{=play.username}}" class="text-cyan-400 hover:text-cyan-300 transition-colors">
+                                                {{=play.username}}
+                                            </a>
+                                        </strong>
+                                    </td>
+                                    <td class="py-3 px-4 text-slate-200">
+                                        {{#def.format: { n: play.bet } }} <span class="text-slate-400">bits</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        {{? play.cash_out}}
+                                        <span class="text-green-400 font-semibold">
+                                            {{#def.format: {n: play.cash_out / play.bet * 100, decimals: 2} }}x
+                                        </span>
+                                        {{??}}
+                                        <span class="text-red-400 font-semibold">Lose</span>
+                                        {{?}}
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        {{? play.bonus }}
+                                        <span class="text-amber-400 font-semibold">
+                                            {{#def.format: {n: play.bonus/play.bet* 100 * 100, decimals: 2} }}%
+                                        </span>
+                                        {{??}}
+                                        <span class="text-slate-500">-</span>
+                                        {{?}}
+                                    </td>
+                                    <td class="py-3 px-4 {{? (play.cash_out ? play.cash_out : 0) - play.bet + ( play.bonus ? play.bonus : 0) >= 0 }}text-green-400{{??}}text-red-400{{?}} font-semibold">
+                                        {{#def.format: { n: (play.cash_out ? play.cash_out : 0) - play.bet + ( play.bonus ? play.bonus : 0) , decimals: 2 } }}
+                                        <span class="text-slate-400 font-normal">bits</span>
+                                    </td>
+                                </tr>
+                            {{~}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Hash Section -->
+            <div class="mt-8 p-4 bg-slate-700/30 rounded-lg border border-slate-600">
+                <h6 class="text-sm font-semibold text-slate-400 mb-2">PROVABLY FAIR HASH</h6>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <a href="/faq#fair" class="text-cyan-400 hover:text-cyan-300 transition-colors font-mono text-sm break-all">
+                        {{=it.game.hash}}
+                    </a>
+                    <button onclick="copyHash('{{=it.game.hash}}')" class="ml-auto flex-shrink-0 px-3 py-1 bg-slate-600 hover:bg-slate-500 rounded transition-colors text-sm">
+                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        Copy
+                    </button>
+                </div>
+            </div>
+
+        </div>
     </div>
+
+    <script>
+    function copyHash(hash) {
+        navigator.clipboard.writeText(hash).then(() => {
+            const button = event.target.closest('button');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!';
+            setTimeout(() => {
+                button.innerHTML = originalText;
+            }, 2000);
+        });
+    }
+    </script>
 
 #}}
 
-{{#def.include('./template/main_old')}}
+{{#def.include('./template/main_new')}}
