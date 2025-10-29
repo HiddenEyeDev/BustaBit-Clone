@@ -11,9 +11,9 @@ if(production) {
 }
 
 module.exports = {
-  "PRODUCTION": production,
-  "DATABASE_URL": process.env.DATABASE_URL || "postgres://localhost:5432/bustabitdb",
-  "BIP32_DERIVED": process.env.BIP32_DERIVED_KEY,
+  "PRODUCTION": false,
+  "DATABASE_URL": process.env.DATABASE_URL || "postgres://bustabit:supersecret@localhost/bustabit",
+  "BIP32_DERIVED": "xprv9s21ZrQH143K2JF8RafpqtKiTbsbaxEeUaMnNHsm5o6wCW3z8ySyH4UxFVSfZ8n7ESu7fgir8imbZKLYVBxFPND1pniTZ81vKfd45EHKX73",
   "AWS_SES_KEY": process.env.AWS_SES_KEY,
   "AWS_SES_SECRET": process.env.AWS_SES_SECRET,
   "CONTACT_EMAIL": process.env.CONTACT_EMAIL || "ryan@moneypot.com",

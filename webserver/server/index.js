@@ -47,7 +47,6 @@ timeago.settings.strings = timeago_strings;
  * **/
 app.set("views", path.join(__dirname, '../views'));
 
-app.locals.recaptchaKey = config.RECAPTCHA_SITE_KEY;
 app.locals.buildConfig = config.BUILD;
 app.locals.miningFeeBits = config.MINING_FEE/100;
 

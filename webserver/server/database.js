@@ -5,6 +5,7 @@ var config = require('../config/config');
 var async = require('async');
 var lib = require('./lib');
 var pg = require('pg');
+var Pool = pg.Pool;
 var passwordHash = require('password-hash');
 var speakeasy = require('speakeasy');
 var m = require('multiline');
@@ -16,17 +17,19 @@ if (!databaseUrl)
 
 console.log('DATABASE_URL: ', databaseUrl);
 
-pg.types.setTypeParser(20, function(val) { // parse int8 as an integer
+pg.types.setTypeParser(20, function(val) {
     return val === null ? null : parseInt(val);
 });
 
-// callback is called with (err, client, done)
-function connect(callback) {
-    return pg.connect(databaseUrl, callback);
-}
+var pool = new Pool({
+    connectionString: databaseUrl
+});
+
+pool.on('error', function(err) {
+    console.error('POSTGRES POOL EMITTED AN ERROR', err);
+});
 
 function query(query, params, callback) {
-    //third parameter is optional
     if (typeof params == 'function') {
         callback = params;
         params = [];
@@ -34,112 +37,105 @@ function query(query, params, callback) {
 
     doIt();
     function doIt() {
-        connect(function(err, client, done) {
-            if (err) return callback(err);
-            client.query(query, params, function(err, result) {
-                done();
-                if (err) {
-                    if (err.code === '40P01') {
-                        console.log('Warning: Retrying deadlocked transaction: ', query, params);
-                        return doIt();
-                    }
-                    return callback(err);
+        pool.query(query, params, function(err, result) {
+            if (err) {
+                if (err.code === '40P01') {
+                    console.log('Warning: Retrying deadlocked transaction: ', query, params);
+                    return doIt();
                 }
+                return callback(err);
+            }
 
-                callback(null, result);
-            });
+            callback(null, result);
         });
     }
 }
 
 exports.query = query;
 
-pg.on('error', function(err) {
-    console.error('POSTGRES EMITTED AN ERROR', err);
-});
+function getClient(runner, finalCallback) {
+    console.log('[getClient] Acquiring DB client...');
 
+    pool.connect(function(err, client, done) {
+        if (err) {
+            console.error('[getClient] Error connecting to DB:', err);
+            return finalCallback(err);
+        }
 
-// runner takes (client, callback)
+        console.log('[getClient] DB client acquired');
 
-// callback should be called with (err, data)
-// client should not be used to commit, rollback or start a new transaction
-
-// callback takes (err, data)
-
-function getClient(runner, callback) {
-    doIt();
-
-    function doIt() {
-        connect(function (err, client, done) {
-            if (err) return callback(err);
-
-            function rollback(err) {
-                client.query('ROLLBACK', done);
-
+        function rollback(err) {
+            console.log('[getClient] Rolling back transaction');
+            client.query('ROLLBACK', function(rbErr) {
+                if (rbErr) console.error('[getClient] Error rolling back:', rbErr);
+                done();
                 if (err.code === '40P01') {
-                    console.log('Warning: Retrying deadlocked transaction..');
-                    return doIt();
+                    console.log('[getClient] Deadlock detected, retrying...');
+                    return getClient(runner, finalCallback);
                 }
+                finalCallback(err);
+            });
+        }
 
-                callback(err);
-            }
+        client.query('BEGIN', function(err) {
+            if (err) return rollback(err);
+            console.log('[getClient] Transaction begun');
 
-            client.query('BEGIN', function (err) {
-                if (err)
-                    return rollback(err);
+            runner(client, function(err, data) {
+                if (err) return rollback(err);
 
-                runner(client, function (err, data) {
-                    if (err)
-                        return rollback(err);
+                client.query('COMMIT', function(err) {
+                    if (err) return rollback(err);
 
-                    client.query('COMMIT', function (err) {
-                        if (err)
-                            return rollback(err);
-
-                        done();
-                        callback(null, data);
-                    });
+                    console.log('[getClient] Transaction committed');
+                    done();
+                    finalCallback(null, data);
                 });
             });
         });
-    }
+    });
 }
 
-//Returns a sessionId
 exports.createUser = function(username, password, email, ipAddress, userAgent, callback) {
     assert(username && password);
+    console.log('[createUser] Starting user creation for:', username);
 
-    getClient(
-        function(client, callback) {
-            var hashedPassword = passwordHash.generate(password);
+    getClient(function(client, cb) {
+        console.log('[createUser] Inside getClient');
 
-            client.query('SELECT COUNT(*) count FROM users WHERE lower(username) = lower($1)', [username],
-                function(err, data) {
-                    if (err) return callback(err);
-                    assert(data.rows.length === 1);
-                    if (data.rows[0].count > 0)
-                        return callback('USERNAME_TAKEN');
+        const hashedPassword = passwordHash.generate(password);
+        console.log('[createUser] Password hashed');
 
-                    client.query('INSERT INTO users(username, email, password) VALUES($1, $2, $3) RETURNING id',
-                            [username, email, hashedPassword],
-                            function(err, data) {
-                                if (err)  {
-                                    if (err.code === '23505')
-                                        return callback('USERNAME_TAKEN');
-                                    else
-                                        return callback(err);
-                                }
+        client.query(
+            'SELECT COUNT(*) AS count FROM users WHERE lower(username) = lower($1)',
+            [username],
+            function(err, data) {
+                if (err) return cb(err);
 
-                                assert(data.rows.length === 1);
-                                var user = data.rows[0];
+                console.log('[createUser] Existing user count:', data.rows[0].count);
+                if (data.rows[0].count > 0) return cb('USERNAME_TAKEN');
 
-                                createSession(client, user.id, ipAddress, userAgent, false, callback);
-                            }
-                        );
+                client.query(
+                    'INSERT INTO users(username, email, password) VALUES($1, $2, $3) RETURNING id',
+                    [username, email, hashedPassword],
+                    function(err, data) {
+                        if (err) {
+                            if (err.code === '23505') return cb('USERNAME_TAKEN');
+                            return cb(err);
+                        }
 
-                    });
-        }
-    , callback);
+                        console.log('[createUser] User inserted, id:', data.rows[0].id);
+
+                        createSession(client, data.rows[0].id, ipAddress, userAgent, false, function(err, sessionId) {
+                            if (err) return cb(err);
+                            console.log('[createUser] Session created:', sessionId);
+                            cb(null, sessionId);
+                        });
+                    }
+                );
+            }
+        );
+    }, callback);
 };
 
 exports.updateEmail = function(userId, email, callback) {
@@ -169,8 +165,6 @@ exports.updateMfa = function(userId, secret, callback) {
     query('UPDATE users SET mfa_secret = $1 WHERE id = $2', [secret, userId], callback);
 };
 
-// Possible errors:
-//   NO_USER, WRONG_PASSWORD, INVALID_OTP
 exports.validateUser = function(username, password, otp, callback) {
     assert(username && password);
 
@@ -187,7 +181,7 @@ exports.validateUser = function(username, password, otp, callback) {
             return callback('WRONG_PASSWORD');
 
         if (user.mfa_secret) {
-            if (!otp) return callback('INVALID_OTP'); // really, just needs one
+            if (!otp) return callback('INVALID_OTP');
 
             var expected = speakeasy.totp({ key: user.mfa_secret, encoding: 'base32' });
 
@@ -199,13 +193,11 @@ exports.validateUser = function(username, password, otp, callback) {
     });
 };
 
-/** Expire all the not expired sessions of an user by id **/
 exports.expireSessionsByUserId = function(userId, callback) {
     assert(userId);
 
     query('UPDATE sessions SET expired = now() WHERE user_id = $1 AND expired > now()', [userId], callback);
 };
-
 
 function createSession(client, userId, ipAddress, userAgent, remember, callback) {
     var sessionId = uuid.v4();
@@ -337,7 +329,6 @@ exports.getUserByName = function(username, callback) {
     });
 };
 
-/* Sets the recovery record to userd and update password */
 exports.changePasswordFromRecoverId = function(recoverId, password, callback) {
     assert(recoverId && password && callback);
     var hashedPassword = passwordHash.generate(password);
@@ -432,7 +423,7 @@ exports.addGiveaway = function(userId, callback) {
                     return callback({ message: 'NOT_ELIGIBLE', time: eligible});
                 }
 
-                var amount = 200; // 2 bits
+                var amount = 200;
                 client.query('INSERT INTO giveaways(user_id, amount) VALUES($1, $2) ', [userId, amount], function(err) {
                     if (err) return callback(err);
 
@@ -636,7 +627,6 @@ exports.setFundingsWithdrawalTxid = function(fundingId, txid, callback) {
     );
 };
 
-
 exports.getLeaderBoard = function(byDb, order, callback) {
     var sql = 'SELECT * FROM leaderboard ORDER BY ' + byDb + ' ' + order + ' LIMIT 100';
     query(sql, function(err, data) {
@@ -669,7 +659,6 @@ exports.getChatTable = function(limit, channelName, callback) {
     });
 };
 
-//Get the history of the chat of all channels except the mods channel
 exports.getAllChatTable = function(limit, callback) {
     assert(typeof limit === 'number');
     var sql = m(function(){/*
@@ -737,3 +726,5 @@ exports.getSiteStats = function(callback) {
     });
 
 };
+
+exports.pool = pool;

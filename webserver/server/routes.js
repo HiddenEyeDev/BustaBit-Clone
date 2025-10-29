@@ -7,7 +7,6 @@ var games = require('./games');
 var sendEmail = require('./sendEmail');
 var stats = require('./stats');
 var config = require('../config/config');
-var recaptchaValidator = require('recaptcha-validator');
 
 
 var production = process.env.NODE_ENV === 'production';
@@ -83,26 +82,6 @@ function adminRestrict(req, res, next) {
     next();
 }
 
-function recaptchaRestrict(req, res, next) {
-  var recaptcha = lib.removeNullsAndTrim(req.body['g-recaptcha-response']);
-  if (!recaptcha) {
-    return res.send('No recaptcha submitted, go back and try again');
-  }
-
-  recaptchaValidator.callback(config.RECAPTCHA_PRIV_KEY, recaptcha, req.ip, function(err) {
-    if (err) {
-      if (typeof err === 'string')
-        res.send('Got recaptcha error: ' + err + ' please go back and try again');
-      else {
-        console.error('[INTERNAL_ERROR] Recaptcha failure: ', err);
-        res.render('error');
-      }
-      return;
-    }
-
-    next();
-  });
-}
 
 
 function table() {
@@ -140,7 +119,7 @@ function tableDev() {
 function requestDevOtt(id, callback) {
     var curl = require('curlrequest');
     var options = {
-        url: 'https://www.bustabit.com/ott',
+        url: 'http://localhost:3841/ott',
         include: true ,
         method: 'POST',
         'cookie': 'id='+id
@@ -189,9 +168,9 @@ module.exports = function(app) {
       return res.render('error');
     });
 
-    app.post('/request', restrict, recaptchaRestrict, user.giveawayRequest);
+    app.post('/request', restrict, user.giveawayRequest);
     app.post('/sent-reset', user.resetPasswordRecovery);
-    app.post('/sent-recover', recaptchaRestrict, user.sendPasswordRecover);
+    app.post('/sent-recover', user.sendPasswordRecover);
     app.post('/reset-password', restrict, user.resetPassword);
     app.post('/edit-email', restrict, user.editEmail);
     app.post('/enable-2fa', restrict, user.enableMfa);
@@ -200,8 +179,8 @@ module.exports = function(app) {
     app.post('/support', restrict, contact('support'));
     app.post('/contact', contact('contact'));
     app.post('/logout', restrictRedirectToHome, user.logout);
-    app.post('/login', recaptchaRestrict, user.login);
-    app.post('/register', recaptchaRestrict, user.register);
+    app.post('/login', user.login);
+    app.post('/register', user.register);
 
     app.post('/ott', restrict, function(req, res, next) {
         var user = req.user;

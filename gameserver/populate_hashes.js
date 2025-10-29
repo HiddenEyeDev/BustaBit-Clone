@@ -1,50 +1,89 @@
-var async = require('async');
-var db = require('./server/database');
-var lib = require('./server/lib');
-var _ = require('lodash');
+const { Pool } = require('pg');
+const crypto = require('crypto');
 
-var offset = 1e6;
+// ---- Database configuration ----
+const DB_CONFIG = {
+  user: 'bustabit',
+  password: 'supersecret',
+  host: '127.0.0.1',
+  port: 5432,
+  database: 'bustabit',
+  max: 10,      // max concurrent connections
+  ssl: false
+};
 
-var games = 1e6;  // You might want to make this 10M for a prod setting..
-var game = games;
-var serverSeed = 'DO NOT USE THIS SEED';
+// ---- Settings ----
+const OFFSET = 1e6;
+const TOTAL_GAMES = 1e6;    // adjust for production/testing
+const BATCH_SIZE = 1000;     // number of inserts per batch
+let serverSeed = 'lol1230';
 
-function loop(cb) {
-    var parallel = Math.min(game, 1000);
-
-    var inserts = _.range(parallel).map(function() {
-
-        return function(cb) {
-            serverSeed = lib.genGameHash(serverSeed);
-            game--;
-
-            db.query('INSERT INTO game_hashes(game_id, hash) VALUES($1, $2)', [offset + game, serverSeed], cb);
-        };
-    });
-
-    async.parallel(inserts, function(err) {
-        if (err) throw err;
-
-        // Clear the current line and move to the beginning.
-        var pct = 100 * (games - game) / games;
-        process.stdout.clearLine();
-        process.stdout.cursorTo(0);
-        process.stdout.write(
-            "Processed: " + (games - game) + ' / ' + games +
-                ' (' + pct.toFixed(2)  + '%)');
-
-        if (game > 0)
-            loop(cb);
-        else {
-            console.log(' Done');
-            cb();
-        }
-    });
+// ---- Helper: generate game hash ----
+function genGameHash(seed) {
+  return crypto.createHash('sha256').update(seed).digest('hex');
 }
 
+// ---- Initialize DB pool ----
+const pool = new Pool(DB_CONFIG);
 
-loop(function() {
+async function ensureTable() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS game_hashes (
+      game_id BIGINT PRIMARY KEY,
+      hash TEXT NOT NULL
+    )
+  `);
+}
 
-    console.log('Finished with serverseed: ', serverSeed);
+// ---- Get last inserted game_id for resume ----
+async function getLastGameId() {
+  const res = await pool.query('SELECT MAX(game_id) AS last_id FROM game_hashes');
+  return res.rows[0].last_id || (OFFSET - 1);
+}
 
+// ---- Insert a batch of hashes ----
+async function insertBatch(startId, batchCount, startingSeed) {
+  let seed = startingSeed;
+  const values = [];
+
+  for (let i = 0; i < batchCount; i++) {
+    seed = genGameHash(seed);
+    values.push(`(${startId + i + 1}, '${seed}')`);
+  }
+
+  const query = `INSERT INTO game_hashes(game_id, hash) VALUES ${values.join(',')}`;
+  await pool.query(query);
+
+  return seed;
+}
+
+// ---- Main population loop ----
+async function populate() {
+  await ensureTable();
+  let lastId = await getLastGameId();
+  let remaining = TOTAL_GAMES - (lastId - OFFSET + 1);
+
+  console.log(`🌱 Starting from game_id ${lastId + 1}, ${remaining} remaining...`);
+
+  while (remaining > 0) {
+    const batch = Math.min(BATCH_SIZE, remaining);
+    serverSeed = await insertBatch(lastId, batch, serverSeed);
+    lastId += batch;
+    remaining -= batch;
+
+    const processed = TOTAL_GAMES - remaining;
+    const pct = ((processed / TOTAL_GAMES) * 100).toFixed(2);
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+    process.stdout.write(`Processed: ${processed}/${TOTAL_GAMES} (${pct}%)`);
+  }
+
+  console.log('\n✅ Done! Final server seed:', serverSeed);
+  await pool.end();
+}
+
+// ---- Run ----
+populate().catch(err => {
+  console.error('❌ Error during population:', err);
+  pool.end();
 });

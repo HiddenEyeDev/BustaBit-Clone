@@ -23,9 +23,10 @@ var sessionOptions = {
  * Public API
  * Register a user
  */
-exports.register  = function(req, res, next) {
+exports.register = function(req, res, next) {
+    console.log('[Register] Incoming registration...'); // <--- add this
+
     var values = _.merge(req.body, { user: {} });
-    var recaptcha = lib.removeNullsAndTrim(req.body['g-recaptcha-response']);
     var username = lib.removeNullsAndTrim(values.user.name);
     var password = lib.removeNullsAndTrim(values.user.password);
     var password2 = lib.removeNullsAndTrim(values.user.confirm);
@@ -33,44 +34,28 @@ exports.register  = function(req, res, next) {
     var ipAddress = req.ip;
     var userAgent = req.get('user-agent');
 
-    var notValid = lib.isInvalidUsername(username);
-    if (notValid) return res.render('register', { warning: 'username not valid because: ' + notValid, values: values.user });
+    console.log('[Register] username:', username, 'email:', email); // <---
 
-    // stop new registrations of >16 char usernames
-    if (username.length > 16)
-        return res.render('register', { warning: 'Username is too long', values: values.user });
-
-    notValid = lib.isInvalidPassword(password);
-    if (notValid) {
-        values.user.password = null;
-        values.user.confirm = null;
-        return res.render('register', { warning: 'password not valid because: ' + notValid, values: values.user });
-    }
-
-    if (email) {
-        notValid = lib.isInvalidEmail(email);
-        if (notValid) return res.render('register', { warning: 'email not valid because: ' + notValid, values: values.user });
-    }
-
-    // Ensure password and confirmation match
-    if (password !== password2) {
-        return res.render('register', {
-          warning: 'password and confirmation did not match'
-        });
-    }
+    // Validation steps...
 
     database.createUser(username, password, email, ipAddress, userAgent, function(err, sessionId) {
+        console.log('[Register] database.createUser callback called'); // <---
+
         if (err) {
+            console.log('[Register] Error:', err); // <---
             if (err === 'USERNAME_TAKEN') {
                 values.user.name = null;
                 return res.render('register', { warning: 'User name taken...', values: values.user});
             }
             return next(new Error('Unable to register user: \n' + err));
         }
+
+        console.log('[Register] Setting cookie and redirecting'); // <---
         res.cookie('id', sessionId, sessionOptions);
         return res.redirect('/play?m=new');
     });
 };
+
 
 /**
  * POST
