@@ -1,18 +1,144 @@
 {{##def.page_title = 'Contact Us' #}}
-{{##def.content:
-<div class="row faq panel radius">
-    <h5>Contact Us</h5>
-    <hr>
-    <div class="row contact">
-        <form action="/contact" id="contact" method="post">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" required=""/>
-            <label for="message">Message</label>
-            <textarea rows="10" id="message" name="message" required> </textarea>
-            <input type="submit" class="border-button right blue" value="Send!"/>
-        </form>
 
+{{##def.content:
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="bg-slate-800/50 backdrop-blur-sm rounded-xl p-8 border border-slate-700 shadow-xl">
+
+        <!-- Header -->
+        <div class="border-b border-slate-700 pb-6 mb-8">
+            <div class="flex items-center gap-4 mb-3">
+                <div class="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h5 class="text-3xl font-bold text-white">Contact Us</h5>
+                    <p class="text-slate-400 mt-1">We'd love to hear from you</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Info Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-slate-700/30 rounded-lg p-4 border border-slate-600 text-center">
+                <div class="w-12 h-12 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h6 class="text-sm font-semibold text-slate-300 mb-1">Response Time</h6>
+                <p class="text-xs text-slate-400">Usually within 24 hours</p>
+            </div>
+
+            <div class="bg-slate-700/30 rounded-lg p-4 border border-slate-600 text-center">
+                <div class="w-12 h-12 bg-emerald-600/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                </div>
+                <h6 class="text-sm font-semibold text-slate-300 mb-1">Support</h6>
+                <p class="text-xs text-slate-400">Available 24/7</p>
+            </div>
+
+            <div class="bg-slate-700/30 rounded-lg p-4 border border-slate-600 text-center">
+                <div class="w-12 h-12 bg-amber-600/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h6 class="text-sm font-semibold text-slate-300 mb-1">Secure</h6>
+                <p class="text-xs text-slate-400">Your info is safe</p>
+            </div>
+        </div>
+
+        <!-- Contact Form -->
+        <form action="/contact" id="contact" method="post" class="space-y-6">
+
+            <!-- Email Field -->
+            <div class="space-y-2">
+                <label for="email" class="block text-sm font-semibold text-slate-300">
+                    Email Address
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+                        </svg>
+                    </div>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        required
+                        class="w-full pl-12 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                        placeholder="your@email.com"
+                    />
+                </div>
+                <p class="text-sm text-slate-400">
+                    We'll respond to this email address
+                </p>
+            </div>
+
+            <!-- Message Field -->
+            <div class="space-y-2">
+                <label for="message" class="block text-sm font-semibold text-slate-300">
+                    Message
+                </label>
+                <textarea
+                    rows="8"
+                    id="message"
+                    name="message"
+                    required
+                    class="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all resize-y min-h-[200px]"
+                    placeholder="Tell us how we can help you..."
+                ></textarea>
+                <p class="text-sm text-slate-400">
+                    Please be as detailed as possible
+                </p>
+            </div>
+
+            <!-- Info Box -->
+            <div class="bg-blue-900/20 border border-blue-700/50 rounded-lg p-4">
+                <div class="flex gap-3">
+                    <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-sm text-blue-200">
+                        Before contacting us, check out our <a href="/faq" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">FAQ page</a> for quick answers to common questions!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4">
+                <button
+                    type="submit"
+                    class="w-full px-6 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 rounded-lg font-bold text-lg text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                    </svg>
+                    Send Message
+                </button>
+            </div>
+
+        </form>
     </div>
 </div>
+
+<style>
+    input:invalid:not(:placeholder-shown),
+    textarea:invalid:not(:placeholder-shown) {
+        border-color: rgb(239 68 68);
+    }
+
+    input:valid:not(:placeholder-shown),
+    textarea:valid:not(:placeholder-shown) {
+        border-color: rgb(34 197 94);
+    }
+</style>
+
 #}}
-{{#def.include('./template/main_old')}}
+
+{{#def.include('./template/main_new')}
