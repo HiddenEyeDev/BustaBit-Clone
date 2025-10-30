@@ -1,50 +1,100 @@
 {{##def.page_title = 'Strategy Guide' #}}
 
 {{##def.content:
-<div class="row faq panel radius">
-    <h3>Strategy Guide</h3>
-    <hr>
-    <p>
-        <b>Bustabit</b> is a game of 99% luck, but 1% skill. This means that if you play in a strategy-oblivious way, you'll
-        not do too bad. But with a good enough strategy, it's actually possible to overcome the house odds, and even make
-        a profit.
+<div class="container mx-auto px-4 py-12 max-w-4xl">
+  <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl shadow-xl p-8">
+    
+    <!-- Header -->
+    <div class="border-b border-slate-700 pb-5 mb-8">
+      <h2 class="text-3xl font-bold text-white">Strategy Guide</h2>
+      <p class="text-slate-400 mt-2 text-sm">A practical guide to understanding Bustabit’s mechanics and maximizing your chances.</p>
+    </div>
 
-    </p>
-    <p><b>Here's how it works:</b></p>
+    <!-- Intro -->
+    <div class="space-y-6 text-slate-300 leading-relaxed">
+      <p>
+        <b class="text-white">Bustabit</b> is a game of <span class="text-cyan-400 font-semibold">99% luck</span> and <span class="text-cyan-400 font-semibold">1% skill</span>.  
+        That means if you play without a strategy, you won’t perform terribly — but with a sharp plan, it’s possible to
+        edge out the house and even turn a profit.
+      </p>
 
-    <h4>Instabust</h4>
-    <p>
-        Right off the bat, there's a <b>1%</b> chance of the game instantly busting. If this happens, no one can win anything.
-        This means bustabit.com has an expected return of <code>1% * playersInGame * tableAmount</code>. This is the <b>exact amount</b>
-        bustabit uses to give out bonuses.
-    </p>
+      <p>
+        <b class="text-white">Here’s how it works:</b>
+      </p>
 
-    <h4>House Edge</h4>
-    <p>
-        It scales between 0 and 1% <smaal><a href="/calculator" target="_blank">see: odds and calculator.</a></smaal>
-        This is what you need to overcome!
-    </p>
+      <!-- Section: Instabust -->
+      <div class="space-y-2">
+        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-green-500"></span> Instabust
+        </h3>
+        <p>
+          Every round has a <b class="text-cyan-400">1%</b> chance of <b>instantly busting</b>. When that happens, no one can win — this creates the
+          <b>house edge</b>.  
+          The expected return to the house is:
+        </p>
+        <p class="bg-slate-700/50 px-4 py-2 rounded-lg font-mono text-slate-200 text-sm border border-slate-600">
+          1% × playersInGame × tableAmount
+        </p>
+        <p>
+          That’s the **exact amount** Bustabit uses to fund its <b>bonus pool</b>.
+        </p>
+      </div>
 
-    <h4>Bonuses</h4>
-    <p>
-        The last person to <b>cash out</b> before a bust gets a bonus, which on average is exactly the same as the server makes
-        from the instabust <a href="/faq#bonusfunded">see: faq</a>. Strategic play revolves completely around trying to get this bonus. If no one
-        collects the bonus, it <b>rolls to the next game.</b>
-    </p>
+      <!-- Section: House Edge -->
+      <div class="space-y-2">
+        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-yellow-500"></span> House Edge
+        </h3>
+        <p>
+          The house edge scales between <b>0% and 1%</b> —
+          <a href="/calculator" target="_blank" class="text-cyan-400 hover:text-cyan-300 underline">see: odds and calculator</a>.  
+          This is the barrier you need to overcome to become profitable.
+        </p>
+      </div>
 
-    <h4>Single Player Game</h4>
-    <p>
-        If you're playing a game, and no one else joins, it's not possible to overcome the <b>house odds</b>, and it becomes
-        a simple game of luck.
-    </p>
+      <!-- Section: Bonuses -->
+      <div class="space-y-2">
+        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-blue-500"></span> Bonuses
+        </h3>
+        <p>
+          The last person to <b>cash out before a bust</b> earns the round’s <b>bonus</b>, which on average equals the house’s
+          instabust profit.  
+          This means the key to strategic play is <b>timing your cash-out perfectly</b>.
+        </p>
+        <p>
+          If no one wins the bonus, it <b class="text-cyan-400">rolls over to the next game</b> —
+          <a href="/faq#bonusfunded" class="text-cyan-400 hover:text-cyan-300 underline">see FAQ</a>.
+        </p>
+      </div>
 
-    <h4>Simple Greedy Strategy</h4>
-    <p>
-        Hold in the game, as soon as you're the last person holding, cash out immediately. This is a great strategy if
-        all your opponents are conservative, and cash out early. However, if you play against someone with the same
-        strategy -- <b>you will both will infinitely hold, and never win the bonus.</b>
-    </p>
+      <!-- Section: Single Player -->
+      <div class="space-y-2">
+        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-purple-500"></span> Single Player Game
+        </h3>
+        <p>
+          If you play alone, there’s no one else to compete for bonuses — meaning you can’t overcome the house odds.  
+          In this case, the game becomes pure <b>luck</b>.
+        </p>
+      </div>
+
+      <!-- Section: Simple Greedy Strategy -->
+      <div class="space-y-2">
+        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-pink-500"></span> Simple Greedy Strategy
+        </h3>
+        <p>
+          Stay in until you’re the last player holding — then cash out immediately.  
+          This works great if your opponents are <b>cautious</b> and cash out early.
+        </p>
+        <p>
+          But beware — if two players use the same greedy approach, you’ll both keep holding indefinitely and never win.
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
-
 #}}
-{{#def.include('./template/main_old')}}
+
+{{#def.include('./template/main_new')}}
