@@ -1,30 +1,54 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Error :(</title>
-    <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/img/favicon.ico" type="image/x-icon">
-    <meta charset="utf-8" />
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height"/>
-    <link rel="stylesheet" href="/css/app.css" />
-</head>
-<body>
-<div class="panel rounded not-found">
-    <div class="row">
-        <div class="large-1 columns">
-            <img src="/img/logo.png" alt=""/>
-        </div>
-        <div class="large-11 columns">
-            <h4>Something bad happened. My humans are working to fix this mess, please come back later...</h4>
-            <br/>
-            {{?it.error}}
-            <h6>Error: {{=it.error}}</h6>
-            {{?}}
+{{#def.include('template/head_new')}}
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen flex items-center justify-center p-4">
+    <div class="container mx-auto px-4 max-w-3xl">
+        <div class="bg-slate-800/50 backdrop-blur-sm rounded-xl p-8 md:p-12 border border-slate-700 shadow-2xl">
+            <div class="flex flex-col md:flex-row items-center gap-6 md:gap-8">
+                <!-- Icon -->
+                <div class="flex-shrink-0">
+                    <div class="w-24 h-24 md:w-28 md:h-28 bg-gradient-to-br from-rose-500 to-red-600 rounded-full flex items-center justify-center shadow-lg">
+                        <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 text-center md:text-left">
+                    <h1 class="text-3xl md:text-4xl font-bold text-white mb-3">
+                        Something went wrong
+                    </h1>
+                    <p class="text-lg text-slate-300 mb-6">
+                        Our team has been notified and is working to resolve the issue. Please try again in a moment.
+                    </p>
+
+                    {{?it.error}}
+                        <div class="bg-rose-900/20 border border-rose-700/50 rounded-lg p-4 mb-6 text-left">
+                            <p class="text-sm text-rose-200">
+                                <span class="font-semibold">Error details:</span>
+                                <span class="break-words">{{=it.error}}</span>
+                            </p>
+                        </div>
+                    {{?}}
+
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+                        <a href="/" class="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 rounded-lg font-bold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                            </svg>
+                            Go Home
+                        </a>
+                        <a href="/support" class="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold text-white transition-all duration-200 border border-slate-600 hover:border-slate-500 flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                            Contact Support
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 </body>
 </html>
-
-
