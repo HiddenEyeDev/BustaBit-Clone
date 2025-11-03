@@ -1,0 +1,165 @@
+{{##def.page_title = 'Stats' #}}
+
+{{##def.content:
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <div class="bg-slate-800/50 backdrop-blur-sm rounded-xl p-8 border border-slate-700 shadow-xl">
+            
+            <!-- Header -->
+            <div class="mb-8">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h5 class="text-3xl font-bold text-white">Bustabit.com Statistics</h5>
+                        <p class="text-sm text-slate-400 mt-1">Generated {{! it.generated }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Admin Alerts Section -->
+                <div class="bg-slate-700/30 rounded-lg p-6 border border-slate-600">
+                    <h6 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        Admin Alerts
+                    </h6>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-semibold text-slate-200">Pending Withdraws</p>
+                                <p class="text-xs text-slate-400">Withdrawals requiring admin review</p>
+                            </div>
+                            <span class="text-2xl font-bold text-amber-400">{{= it.stats.pending_withdrawals.count }}</span>
+                        </div>
+                        <div class="h-px bg-slate-600"></div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-semibold text-slate-200">Unterminated Games</p>
+                                <p class="text-xs text-slate-400">Games requiring admin review</p>
+                            </div>
+                            <span class="text-2xl font-bold text-amber-400">{{= it.stats.unterminated_games.count }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Summary Section -->
+                <div class="bg-slate-700/30 rounded-lg p-6 border border-slate-600">
+                    <h6 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Financial Summary
+                    </h6>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-slate-300">Deposits:</span>
+                            <span class="font-semibold text-white">{{#def.format: {n: it.stats.deposits.sum} }} bits</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-300">Withdrawals:</span>
+                            <span class="font-semibold text-white">{{#def.format: { n: it.stats.withdrawals.sum } }} bits</span>
+                        </div>
+                        <div class="h-px bg-slate-600"></div>
+                        <div class="flex justify-between items-center bg-green-900/20 -mx-2 px-2 py-2 rounded">
+                            <span class="font-bold text-green-300">Net:</span>
+                            <span class="font-bold text-lg text-green-300">{{#def.format: { n: (it.stats.deposits.sum - (it.stats.withdrawals.sum * -1)) } }} bits</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Statistics Section -->
+                <div class="bg-slate-700/30 rounded-lg p-6 border border-slate-600 lg:col-span-2">
+                    <h6 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Game Statistics
+                    </h6>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-slate-300">Total Wagered:</span>
+                                <span class="font-semibold text-white">{{#def.format: {n: it.stats.plays.total_bet } }} bits</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-300">Cashed Out:</span>
+                                <div class="text-right">
+                                    <span class="font-semibold text-white">{{#def.format: {n: it.stats.plays.cashed_out } }} bits</span>
+                                    <span class="text-xs text-slate-400 ml-2">({{= (it.stats.plays.cashed_out / it.stats.plays.total_bet * 100).toFixed(2) }}%)</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-300">Bonuses:</span>
+                                <div class="text-right">
+                                    <span class="font-semibold text-white">{{#def.format: {n: it.stats.plays.bonused } }} bits</span>
+                                    <span class="text-xs text-slate-400 ml-2">({{= (it.stats.plays.bonused / it.stats.plays.total_bet * 100).toFixed(2) }}%)</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-300">Total Won:</span>
+                                <div class="text-right">
+                                    <span class="font-semibold text-white">{{#def.format: {n: (9 + it.stats.plays.cashed_out + it.stats.plays.bonused) } }} bits</span>
+                                    <span class="text-xs text-slate-400 ml-2">({{= ((it.stats.plays.cashed_out + it.stats.plays.bonused) / it.stats.plays.total_bet * 100).toFixed(2) }}%)</span>
+                                </div>
+                            </div>
+                            <div class="h-px bg-slate-600"></div>
+                            <div class="flex justify-between items-center bg-blue-900/20 -mx-2 px-2 py-2 rounded">
+                                <span class="font-bold text-blue-300">Our Profit:</span>
+                                <div class="text-right">
+                                    <span class="font-bold text-lg text-blue-300">{{#def.format: {n: it.stats.plays.total_bet - it.stats.plays.cashed_out - it.stats.plays.bonused  } }} bits</span>
+                                    <span class="text-xs text-blue-400 ml-2">({{= ((it.stats.plays.total_bet - it.stats.plays.cashed_out - it.stats.plays.bonused ) / it.stats.plays.total_bet * 100).toFixed(2) }}%)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center bg-emerald-900/20 px-3 py-2 rounded">
+                                <span class="font-bold text-emerald-300">Bankroll:</span>
+                                <span class="font-bold text-lg text-emerald-300">{{#def.format: {n: it.stats.plays.total_bet - it.stats.plays.cashed_out - it.stats.plays.bonused + it.stats.bankroll_offset } }} bits</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-purple-900/20 px-3 py-2 rounded">
+                                <span class="font-semibold text-purple-300">Max Win/Game:</span>
+                                <span class="font-semibold text-purple-300">{{#def.format: {n: (it.stats.plays.total_bet - it.stats.plays.cashed_out - it.stats.plays.bonused + it.stats.bankroll_offset)*0.03 } }} bits</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Platform Metrics Section -->
+                <div class="bg-slate-700/30 rounded-lg p-6 border border-slate-600 lg:col-span-2">
+                    <h6 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        Platform Metrics
+                    </h6>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div class="text-center">
+                            <p class="text-slate-400 text-sm mb-2">Total Users</p>
+                            <p class="text-3xl font-bold text-white">{{=it.stats.users.count}}</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-slate-400 text-sm mb-2">Total Plays</p>
+                            <p class="text-3xl font-bold text-white">{{=it.stats.plays.count }}</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-slate-400 text-sm mb-2">Total Games</p>
+                            <p class="text-3xl font-bold text-white">{{=it.stats.games.count}}</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+#}}
+
+{{#def.include('./template/main_new')}}

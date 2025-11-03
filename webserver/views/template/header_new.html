@@ -1,0 +1,93 @@
+<header>
+    <nav class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700 sticky top-0 z-50 shadow-lg">
+        <div class="container mx-auto px-4 max-w-7xl">
+            <div class="flex items-center justify-between py-4 gap-4">
+
+                <!-- Logo/Title -->
+                <div class="title flex-shrink-0">
+                    <a href="/" class="text-2xl md:text-3xl font-bold text-white hover:text-cyan-400 transition-colors">
+                        <h1 class="gradient-text">bustabit</h1>
+                    </a>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden lg:flex items-center gap-6 flex-1 justify-center">
+                    <ul class="flex items-center gap-6">
+                        <li><a href="/request" class="text-slate-300 hover:text-white transition-colors font-medium">Faucet</a></li>
+                        <li><a href="/leaderboard" class="text-slate-300 hover:text-white transition-colors font-medium">Leaderboard</a></li>
+                        <li><a href="/stats" class="text-slate-300 hover:text-white transition-colors font-medium">Stats</a></li>
+                        <li><a href="/faq" class="text-slate-300 hover:text-white transition-colors font-medium">FAQ</a></li>
+                    </ul>
+                </div>
+
+                <!-- User Login/Balance -->
+                <div class="user-login flex items-center gap-3 flex-shrink-0">
+                    {{?it.user}}
+                    <div class="hidden md:flex items-center gap-3 bg-slate-700/50 rounded-lg px-4 py-2 border border-slate-600">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="text-slate-400 text-sm">Bits:</span>
+                            <span class="text-white font-semibold">{{#def.format:{n: it.user.balance_satoshis, decimals:2} }}</span>
+                        </div>
+                    </div>
+                    <div class="hidden md:block">
+                        <a href="/account" class="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">{{=it.user.username}}</a>
+                    </div>
+                    <!-- Mobile User Display -->
+                    <div class="md:hidden flex items-center gap-2 bg-slate-700/50 rounded-lg px-3 py-2 border border-slate-600">
+                        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <a href="/account" class="text-white font-semibold text-sm">{{#def.format:{n: it.user.balance_satoshis, decimals:2} }}</a>
+                    </div>
+                    {{??}}
+                    <div class="flex items-center gap-2">
+                        <a href="/register" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors font-medium text-white text-sm md:text-base">Register</a>
+                        <a href="/login" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors font-medium text-white text-sm md:text-base">Log in</a>
+                    </div>
+                    {{?}}
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button class="lg:hidden text-white p-2 hover:bg-slate-700 rounded transition-colors" onclick="toggleMobileMenu()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden lg:hidden pb-4 border-t border-slate-700 pt-4">
+                <ul class="flex flex-col space-y-2">
+                    <li><a href="/request" class="block text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors font-medium px-4 py-2 rounded">Faucet</a></li>
+                    <li><a href="/leaderboard" class="block text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors font-medium px-4 py-2 rounded">Leaderboard</a></li>
+                    <li><a href="/stats" class="block text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors font-medium px-4 py-2 rounded">Stats</a></li>
+                    <li><a href="/faq" class="block text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors font-medium px-4 py-2 rounded">FAQ</a></li>
+                    {{?it.user}}
+                    <li class="pt-2 border-t border-slate-700">
+                        <a href="/account" class="block text-cyan-400 hover:text-cyan-300 hover:bg-slate-700/50 transition-colors font-medium px-4 py-2 rounded">Account</a>
+                    </li>
+                    {{?}}
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<style>
+    .gradient-text {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+</style>
+
+<script>
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobile-menu');
+    menu.classList.toggle('hidden');
+}
+</script>
