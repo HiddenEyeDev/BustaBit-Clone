@@ -73,11 +73,20 @@ Export the database link as an environment variable
 
     export DATABASE_URL=postgres://bustabit:<YOURPASSWORD>@localhost/bustabitdb
 
-### BIP32 Key
+### Coinbase API credentials
 
-You will need to create a BIP32 key pair. You can do at your own risk online at [bip32.org](http://bip32.org/). Export the public key as an environment variable
+Create a Coinbase API key for the wallet that will hold your Bustabit funds. The key must allow reading account balances, creating addresses, and sending transactions. Export the credentials so the application can authenticate:
 
-    export BIP32_DERIVED_KEY=xpub6AH.....
+```
+export COINBASE_API_KEY=yourApiKey
+export COINBASE_API_SECRET=yourApiSecret
+export COINBASE_ACCOUNT_ID=primaryAccountId
+# Optional overrides
+export COINBASE_API_VERSION=2023-10-01
+export COINBASE_MAX_PAGES=5
+```
+
+Deposit addresses are now provisioned directly through Coinbase, so no manual HD wallet setup is required.
 
 
 Running

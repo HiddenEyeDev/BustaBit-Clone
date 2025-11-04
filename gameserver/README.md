@@ -73,18 +73,15 @@ Export the database link as an environment variable
 
     export DATABASE_URL=postgres://moneypot:<YOURPASSWORD>@localhost/moneypotdb
 
-### BIP32 Key
+### Coinbase API credentials
 
-You will need to create a BIP32 key pair. You can do at your own risk online at [bip32.org](http://bip32.org/). Export the public key as an environment variable
+Configure the same Coinbase API credentials used by the webserver so the game services can query balances when necessary:
 
-    export BIP32_DERIVED_KEY=xpub6AH.....
-
-### Coinbase
-
-TODO
-
-    export COINBASE_API_KEY
-    export COINBASE_SECRET
+```
+export COINBASE_API_KEY=yourApiKey
+export COINBASE_API_SECRET=yourApiSecret
+export COINBASE_ACCOUNT_ID=primaryAccountId
+```
 
 Running
 =======

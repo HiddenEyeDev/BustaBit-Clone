@@ -12,11 +12,46 @@ var qr = require('qr-image');
 var uuid = require('uuid');
 var _ = require('lodash');
 var config = require('../config/config');
+var coinbase = require('./coinbase_client');
 
 var sessionOptions = {
     httpOnly: true,
     secure : config.PRODUCTION
 };
+
+function ensureDepositAddress(user, callback) {
+    if (!user)
+        return callback(new Error('User not provided'));
+
+    if (user.coinbase_deposit_address) {
+        user.deposit_address = user.coinbase_deposit_address;
+        return callback(null, user.coinbase_deposit_address);
+    }
+
+    var label = 'User ' + user.id;
+
+    coinbase.createAddress(label, function(err, address) {
+        if (err)
+            return callback(err);
+
+        if (!address || !address.address)
+            return callback(new Error('Coinbase did not return a deposit address'));
+
+        database.setCoinbaseDepositAddress(user.id, address.address, address.id, function(dbErr, stored) {
+            if (dbErr)
+                return callback(dbErr);
+
+            var finalAddress = stored && stored.coinbase_deposit_address ? stored.coinbase_deposit_address : address.address;
+            var finalAddressId = stored && stored.coinbase_address_id ? stored.coinbase_address_id : address.id;
+
+            user.coinbase_deposit_address = finalAddress;
+            user.coinbase_address_id = finalAddressId;
+            user.deposit_address = finalAddress;
+
+            callback(null, finalAddress);
+        });
+    });
+}
 
 /**
  * POST
@@ -309,9 +344,13 @@ exports.account = function(req, res, next) {
         user.withdrawals = !withdrawals.sum ? 0 : withdrawals.sum;
         user.giveaways = !giveaways.sum ? 0 : giveaways.sum;
         user.net_profit = net.profit;
-        user.deposit_address = lib.deriveAddress(user.id);
 
-        res.render('account', { user: user });
+        ensureDepositAddress(user, function(err) {
+            if (err)
+                return next(new Error('Unable to provide deposit address: \n' + err));
+
+            res.render('account', { user: user });
+        });
     });
 };
 
@@ -605,8 +644,12 @@ exports.deposit = function(req, res, next) {
             return next(new Error('Unable to get deposits: \n' + err));
         }
         user.deposits = deposits;
-        user.deposit_address = lib.deriveAddress(user.id);
-        res.render('deposit', { user:  user });
+        ensureDepositAddress(user, function(err) {
+            if (err)
+                return next(new Error('Unable to provide deposit address: \n' + err));
+
+            res.render('deposit', { user:  user });
+        });
     });
 };
 

@@ -329,6 +329,21 @@ exports.getUserByName = function(username, callback) {
     });
 };
 
+exports.setCoinbaseDepositAddress = function(userId, address, addressId, callback) {
+    assert(userId && address && callback);
+
+    var sql = 'UPDATE users SET coinbase_deposit_address = COALESCE(coinbase_deposit_address, $2), coinbase_address_id = COALESCE(coinbase_address_id, $3) WHERE id = $1 RETURNING coinbase_deposit_address, coinbase_address_id';
+    query(sql, [userId, address, addressId || null], function(err, result) {
+        if (err)
+            return callback(err);
+
+        if (result.rows.length === 0)
+            return callback(new Error('Unable to update deposit address for user ' + userId));
+
+        callback(null, result.rows[0]);
+    });
+};
+
 exports.changePasswordFromRecoverId = function(recoverId, password, callback) {
     assert(recoverId && password && callback);
     var hashedPassword = passwordHash.generate(password);

@@ -1,5 +1,4 @@
 var assert = require('better-assert');
-var bitcoinjs = require('bitcoinjs-lib');
 var crypto = require('crypto');
 var config = require('../config/config');
 
@@ -72,17 +71,6 @@ exports.isEligibleForGiveAway = function(lastGiveAway) {
         return true;
 
     return Math.round(60 - timeElapsed);
-};
-
-var derivedPubKey = config.BIP32_DERIVED;
-if (!derivedPubKey)
-    throw new Error('Must set env var BIP32_DERIVED_KEY');
-
-
-var hdNode = bitcoinjs.HDNode.fromBase58(derivedPubKey);
-
-exports.deriveAddress = function(index) {
-    return hdNode.derive(index).pubKey.getAddress().toString();
 };
 
 exports.formatSatoshis = function(n, decimals) {
