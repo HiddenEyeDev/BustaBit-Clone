@@ -18,6 +18,8 @@ CREATE TABLE users (
     net_profit bigint DEFAULT 0 NOT NULL,
     games_played bigint DEFAULT 0 NOT NULL,
     userclass UserClassEnum DEFAULT 'user' NOT NULL,
+    coinbase_deposit_address text,
+    coinbase_address_id text,
     CONSTRAINT users_balance_satoshis_check CHECK ((balance_satoshis >= 0))
 );
 
@@ -208,7 +210,9 @@ CREATE VIEW users_view AS
     ( SELECT max(giveaways.created) AS max
            FROM giveaways
           WHERE (giveaways.user_id = u.id)) AS last_giveaway,
-    u.userclass
+    u.userclass,
+    u.coinbase_deposit_address,
+    u.coinbase_address_id
    FROM users u;
 
 

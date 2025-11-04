@@ -1,179 +1,159 @@
-var assert = require('better-assert');
 var async = require('async');
-var bc = require('./src/bitcoin_client');
+var CoinbaseClient = require('../lib/coinbase');
 var db = require('./src/db');
-var lib = require('./src/lib');
-var fs = require('fs')
 
+var POLL_INTERVAL = parseInt(process.env.COINBASE_POLL_INTERVAL || '20000', 10);
+if (isNaN(POLL_INTERVAL) || POLL_INTERVAL < 5000)
+    POLL_INTERVAL = 20000;
 
-var client;
+var MAX_TRACKED_TRANSACTIONS = parseInt(process.env.COINBASE_MAX_TRACKED || '1000', 10);
+if (isNaN(MAX_TRACKED_TRANSACTIONS) || MAX_TRACKED_TRANSACTIONS < 100)
+    MAX_TRACKED_TRANSACTIONS = 1000;
 
-// Mapping of deposit_address -> user_id
-var depositAddresses = JSON.parse(fs.readFileSync('.addresses.json', 'utf8'));
-assert(depositAddresses);
+var coinbaseClient = new CoinbaseClient({
+    apiKey: process.env.COINBASE_API_KEY,
+    apiSecret: process.env.COINBASE_API_SECRET,
+    accountId: process.env.COINBASE_ACCOUNT_ID,
+    apiVersion: process.env.COINBASE_API_VERSION,
+    maxPages: parseInt(process.env.COINBASE_MAX_PAGES || '5', 10) || 5
+});
 
+var processedTransactions = Object.create(null);
+var processedOrder = [];
 
-startBlockLoop();
+function trackProcessed(id) {
+    processedTransactions[id] = true;
+    processedOrder.push(id);
 
-function processTransactionIds(txids, callback) {
+    while (processedOrder.length > MAX_TRACKED_TRANSACTIONS) {
+        var oldest = processedOrder.shift();
+        delete processedTransactions[oldest];
+    }
+}
 
-    bc.getTransactionIdsAddresses(txids, function(err, addressToAmountLists) {
-        if (err) return callback(err);
+function untrack(id) {
+    if (!processedTransactions[id])
+        return;
 
-        assert(txids.length === addressToAmountLists.length);
+    delete processedTransactions[id];
+    var index = processedOrder.indexOf(id);
+    if (index !== -1)
+        processedOrder.splice(index, 1);
+}
 
-        var tasks = [];
+function extractTransactionHash(tx) {
+    if (tx && tx.network) {
+        if (tx.network.hash)
+            return tx.network.hash;
+        if (tx.network.transaction_hash)
+            return tx.network.transaction_hash;
+    }
+    return tx && tx.id ? tx.id : null;
+}
 
-        addressToAmountLists.forEach(function(addressToAmount, i) {
+function extractTransactionAddress(tx) {
+    if (!tx)
+        return null;
 
-            var txid = txids[i];
-            assert(txid);
+    if (tx.address)
+        return tx.address;
 
-            var usersToAmounts = {};
-
-            Object.keys(addressToAmount).forEach(function(address) {
-
-                var userId = depositAddresses[address];
-                if (userId) {
-                    usersToAmounts[userId] = addressToAmount[address];
-                }
-            });
-
-
-            if (Object.keys(usersToAmounts).length > 0) {
-                console.log('Transactions: ', txid, ' matches: ', usersToAmounts);
-
-                Object.keys(usersToAmounts).forEach(function(userId) {
-                    tasks.push(function(callback) {
-                        db.addDeposit(userId, txid, usersToAmounts[userId], callback);
-                    });
-                });
-
-
+    if (tx.to) {
+        if (Array.isArray(tx.to) && tx.to.length > 0) {
+            var candidate = tx.to[0];
+            if (candidate) {
+                if (typeof candidate === 'string')
+                    return candidate;
+                if (candidate.address)
+                    return candidate.address;
             }
-        });
-
-        async.parallelLimit(tasks, 3, callback);
-    });
-}
-
-
-
-// Handling the block...
-
-
-/// block chain loop
-
-var lastBlockCount;
-var lastBlockHash;
-
-function startBlockLoop() {
-    // initialize...
-    db.getLastBlock(function (err, block) {
-        if (err)
-            throw new Error('Unable to get initial last block: ', err);
-
-        lastBlockCount = block.height;
-        lastBlockHash = block.hash;
-
-        console.log('Initialized on block: ', lastBlockCount, ' with hash: ', lastBlockHash);
-
-        blockLoop();
-    });
-}
-
-function scheduleBlockLoop() {
-    setTimeout(blockLoop, 20000);
-}
-
-function blockLoop() {
-    bc.getBlockCount(function(err, num) {
-        if (err) {
-            console.error('Unable to get block count');
-            return scheduleBlockLoop();
+        } else if (tx.to.address) {
+            return tx.to.address;
         }
+    }
 
-        if (num === lastBlockCount) {
-            console.log('Block chain still ', num, ' length. No need to do anything');
-            return scheduleBlockLoop();
-        }
+    if (tx.details) {
+        if (tx.details.coinbase_address)
+            return tx.details.coinbase_address;
+        if (tx.details.to && tx.details.to.address)
+            return tx.details.to.address;
+    }
 
-        bc.getBlockHash(lastBlockCount, function(err, hash) {
-            if (err) {
-                console.error('Could not get block hash, error: ' + err);
-                return scheduleBlockLoop();
-            }
+    return null;
+}
 
-            if (lastBlockHash !== hash) {
-                // There was a block-chain reshuffle. So let's just jump back a block
-                db.getBlock(lastBlockCount - 1, function(err, block) {
-                    if (err) {
-                        console.error('ERROR: Unable jump back ', err);
-                        return scheduleBlockLoop();
-                    }
+function isIncomingBitcoin(tx) {
+    if (!tx || !tx.amount)
+        return false;
 
-                    --lastBlockCount;
-                    lastBlockHash = block.hash;
-                    blockLoop();
-                });
-                return;
-            }
+    var currency = tx.amount.currency || tx.amount.currency_code || tx.amount.currencyCode;
+    if (currency && currency.toUpperCase() !== 'BTC')
+        return false;
 
-            bc.getBlockHash(lastBlockCount+1, function(err, hash) {
+    var value = parseFloat(tx.amount.amount || tx.amount.value || tx.amount);
+    if (isNaN(value) || value <= 0)
+        return false;
+
+    if (tx.status && tx.status.toLowerCase() !== 'completed')
+        return false;
+
+    return true;
+}
+
+function processTransactions(transactions, callback) {
+    var tasks = [];
+
+    transactions.forEach(function(tx) {
+        if (!isIncomingBitcoin(tx))
+            return;
+
+        var txid = extractTransactionHash(tx);
+        if (!txid || processedTransactions[txid])
+            return;
+
+        var address = extractTransactionAddress(tx);
+        if (!address)
+            return;
+
+        processedTransactions[txid] = true;
+
+        tasks.push(function(cb) {
+            var amount = parseFloat(tx.amount.amount || tx.amount.value || tx.amount);
+
+            db.addDepositByAddress(address, txid, amount, function(err) {
                 if (err) {
-                    console.error('Unable to get block hash: ', lastBlockCount+1);
-                    return scheduleBlockLoop();
+                    untrack(txid);
+                    return cb(err);
                 }
 
-                processBlock(hash, function(err) {
-                    if (err) {
-                        console.error('Unable to process block: ', hash, ' because: ', err);
-                        return scheduleBlockLoop();
-                    }
-
-                    ++lastBlockCount;
-                    lastBlockHash = hash;
-
-
-                    db.insertBlock(lastBlockCount, lastBlockHash, function(err) {
-                       if (err)
-                          console.error('Danger, unable to save results in database...');
-
-                        // All good! Loop immediately!
-                        blockLoop();
-                    });
-                });
+                trackProcessed(txid);
+                cb();
             });
-
         });
     });
+
+    async.parallelLimit(tasks, 3, callback);
 }
 
-function processBlock(hash, callback) {
-    console.log('Processing block: ', hash);
-
-    var start = new Date();
-
-    bc.getBlock(hash, function(err, blockInfo) {
+function poll() {
+    coinbaseClient.listTransactions({ limit: 100 }, function(err, transactions) {
         if (err) {
-            console.error('Unable to get block info for: ', hash, ' got error: ', err);
-            return callback(err);
+            console.error('Unable to fetch Coinbase transactions:', err.message || err);
+            return schedule();
         }
 
-        var transactionsIds = blockInfo.tx;
+        processTransactions(transactions || [], function(processErr) {
+            if (processErr)
+                console.error('Error processing Coinbase transactions:', processErr.message || processErr);
 
-
-        processTransactionIds(transactionsIds, function(err) {
-            if (err)
-                console.log('Unable to process block (in ',  (new Date() - start ) / 1000, ' seconds)');
-            else
-                console.log('Processed ', transactionsIds.length, ' transactions in ', (new Date() - start ) / 1000, ' seconds');
-
-            callback(err)
+            schedule();
         });
     });
-
 }
 
+function schedule() {
+    setTimeout(poll, POLL_INTERVAL);
+}
 
-
+console.log('Starting Coinbase deposit watcher with interval', POLL_INTERVAL, 'ms');
+poll();

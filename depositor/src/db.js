@@ -171,3 +171,19 @@ exports.addDeposit = function(userId, txid, amount, callback) {
         callback(null);
     });
 };
+
+exports.addDepositByAddress = function(address, txid, amount, callback) {
+    if (!address)
+        return callback(new Error('Address required to add deposit'));
+
+    query('SELECT id FROM users WHERE coinbase_deposit_address = $1', [address], function(err, result) {
+        if (err)
+            return callback(err);
+
+        if (result.rows.length === 0)
+            return callback();
+
+        var userId = result.rows[0].id;
+        exports.addDeposit(userId, txid, amount, callback);
+    });
+};

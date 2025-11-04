@@ -1,5 +1,5 @@
 var assert = require('assert');
-var bc = require('./bitcoin_client');
+var coinbase = require('./coinbase_client');
 var db = require('./database');
 var request = require('request');
 var config = require('../config/config');
@@ -26,12 +26,22 @@ module.exports = function(userId, satoshis, withdrawalAddress, withdrawalId, cal
         assert(fundingId);
 
         var amountToSend = (satoshis - config.MINING_FEE) / 1e8;
-        bc.sendToAddress(withdrawalAddress, amountToSend, function (err, hash) {
+        var amountAsString = amountToSend.toFixed(8);
+
+        coinbase.send({ to: withdrawalAddress, amount: amountAsString }, function (err, tx) {
             if (err) {
-                if (err.message === 'Insufficient funds')
+                if (err.code && err.code.toLowerCase() === 'insufficient_funds')
                     return callback('PENDING');
                 return callback('FUNDING_QUEUED');
             }
+
+            var hash = null;
+            if (tx && tx.network) {
+                hash = tx.network.hash || tx.network.transaction_hash || null;
+            }
+
+            if (!hash && tx && tx.id)
+                hash = tx.id;
 
             db.setFundingsWithdrawalTxid(fundingId, hash, function (err) {
                 if (err)

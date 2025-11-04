@@ -1,7 +1,4 @@
 var async = require('async');
-var bitcoinjs = require('bitcoinjs-lib');
-
-
 function chunk(array, chunkSize) {
     return [].concat.apply([],
         array.map(function(elem,i) {
@@ -82,14 +79,4 @@ function chunkSlow(func, inputs, chunkSize, delay, callback) {
 exports.chunk = chunk;
 exports.chunkRun = chunkRun;
 exports.chunkSlow = chunkSlow;
-
-var derivedPubKey = process.env.BIP32_DERIVED_KEY;
-if (!derivedPubKey)
-    throw new Error('Must set env var BIP32_DERIVED_KEY');
-
-var hdNode = bitcoinjs.HDNode.fromBase58(derivedPubKey);
-
-exports.deriveAddress = function(index) {
-    return hdNode.derive(index).getAddress().toString();
-};
 
